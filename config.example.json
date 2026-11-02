@@ -1,0 +1,7 @@
+{
+  "upstream_url": "auto",
+  "public_port": 32400,
+  "listen_port": 13240,
+  "intercept_ipv6": true,
+  "max_connections": 256
+}

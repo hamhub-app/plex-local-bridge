@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+. "${0%/*}/common"
+# DSM 以套件账号执行；管理员端口接管由独立的显式启用步骤处理。
+mkdir -p "$PKG_VAR" "$PKG_ETC" "$BRIDGE_STATE"
+chmod 0700 "$BRIDGE_STATE"
+if [ ! -f "$BRIDGE_CONFIG" ]; then
+    "$BRIDGE_BIN" init-config --config "$BRIDGE_CONFIG"
+fi
+chmod 0600 "$BRIDGE_CONFIG"
+"$BRIDGE_BIN" init-webui --state "$BRIDGE_STATE"
+exit 0

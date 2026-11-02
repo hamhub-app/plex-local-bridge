@@ -1,0 +1,14 @@
+/dist/
+/coverage.out
+*.spk
+*.log
+local*.json
+/config.json
+.env
+.env.*
+*.key
+*.pem
+*.zip
+.DS_Store
+__pycache__/
+*.pyc

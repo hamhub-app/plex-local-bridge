@@ -1,0 +1,7 @@
+#!/bin/sh
+# 安装前仅做检查，不改变 NAS 状态。
+if [ ! -d /var/packages/PlexMediaServer/target ]; then
+    echo "Install the native Plex Media Server package first." >&2
+    exit 1
+fi
+exit 0

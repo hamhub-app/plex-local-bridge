@@ -1,0 +1,3 @@
+#!/bin/sh
+# DSM 在升级时先执行 postinst；这里复用幂等的权限与配置准备。
+exec "${0%/*}/postinst"

@@ -1,0 +1,35 @@
+name: Validate
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: go test -race ./...
+      - run: go vet ./...
+      - run: python3 -m unittest discover -s tests -v
+      - run: node --test tests/*.test.cjs
+      - run: for script in ui/*.js; do node --check "$script"; done
+      - run: for script in synology/scripts/* admin/*.sh; do sh -n "$script"; done
+      - run: python3 scripts/build_spk.py --arch amd64
+      - run: python3 scripts/build_spk.py --arch arm64
+      - run: python3 tests/integration_docker.py --arch amd64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plex-local-bridge-spk
+          path: |
+            dist/*.spk
+            dist/*.spk.sha256
+          if-no-files-found: error

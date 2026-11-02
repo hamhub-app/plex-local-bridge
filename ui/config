@@ -1,0 +1,15 @@
+{
+  "PlexLocalBridge.js": {
+    "SYNO.SDS.PlexLocalBridge.Instance": {
+      "type": "app",
+      "title": "Plex Local Bridge",
+      "desc": "Plex 本机代理设置与端口接管",
+      "appWindow": "SYNO.SDS.PlexLocalBridge.Instance",
+      "icon": "images/icon_{0}.png",
+      "allUsers": false,
+      "allowMultiInstance": false,
+      "hidden": false,
+      "depend": []
+    }
+  }
+}

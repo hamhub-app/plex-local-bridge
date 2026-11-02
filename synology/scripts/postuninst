@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+. "${0%/*}/common"
+# 升级也会调用本脚本。保留 etc/var，不触碰 Plex 的文件或设置。
+if [ -x "$BRIDGE_BIN" ]; then
+    "$BRIDGE_BIN" daemon-stop --state "$BRIDGE_STATE"
+fi
+exit 0

@@ -1,0 +1,14 @@
+#!/bin/sh
+# 固定 PATH，控制脚本只以 DSM 套件账号运行。
+PATH=/usr/syno/sbin:/usr/syno/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+PACKAGE=PlexLocalBridge
+PKG_BASE=/var/packages/$PACKAGE
+PKG_DEST=${SYNOPKG_PKGDEST:-$PKG_BASE/target}
+PKG_VAR=${SYNOPKG_PKGVAR:-$PKG_BASE/var}
+PKG_ETC=$PKG_BASE/etc
+BRIDGE_BIN=$PKG_DEST/bin/plex-local-bridge
+BRIDGE_CONFIG=$PKG_ETC/config.json
+BRIDGE_STATE=$PKG_VAR/run
+BRIDGE_LOG=$PKG_VAR/service.log
+umask 027

@@ -1,0 +1,51 @@
+#!/bin/sh
+set -eu
+. "${0%/*}/common"
+
+case "${1:-}" in
+    prestart|prestop)
+        exit 0
+        ;;
+    start)
+        if "$BRIDGE_BIN" daemon-status --state "$BRIDGE_STATE" >/dev/null 2>&1; then
+            exit 0
+        fi
+        # 只在启动时轮转；运行期日志仅记录状态变化，不写逐请求日志。
+        if [ -f "$BRIDGE_LOG" ] && [ "$(wc -c < "$BRIDGE_LOG")" -gt 5242880 ]; then
+            mv -f "$BRIDGE_LOG" "$BRIDGE_LOG.1"
+        fi
+        touch "$BRIDGE_LOG"
+        chmod 0600 "$BRIDGE_LOG"
+        "$BRIDGE_BIN" daemon --config "$BRIDGE_CONFIG" --state "$BRIDGE_STATE" </dev/null >>"$BRIDGE_LOG" 2>&1 &
+        starter_pid=$!
+        attempt=0
+        while [ "$attempt" -lt 30 ]; do
+            if "$BRIDGE_BIN" daemon-status --state "$BRIDGE_STATE" >/dev/null 2>&1; then exit 0; fi
+            if ! kill -0 "$starter_pid" 2>/dev/null; then
+                echo "Plex Local Bridge could not start. See $BRIDGE_LOG" >&2
+                exit 1
+            fi
+            sleep 1
+            attempt=$((attempt + 1))
+        done
+        "$BRIDGE_BIN" daemon-stop --state "$BRIDGE_STATE"
+        echo "Plex Local Bridge startup timed out. See $BRIDGE_LOG" >&2
+        exit 1
+        ;;
+    stop)
+        "$BRIDGE_BIN" daemon-stop --state "$BRIDGE_STATE"
+        ;;
+    status)
+        if [ ! -x "$BRIDGE_BIN" ]; then exit 150; fi
+        if "$BRIDGE_BIN" daemon-status --state "$BRIDGE_STATE" >/dev/null 2>&1; then exit 0; fi
+        if [ -f "$BRIDGE_STATE/daemon.pid" ]; then exit 1; fi
+        exit 3
+        ;;
+    log)
+        echo "$BRIDGE_LOG"
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|status|log}" >&2
+        exit 1
+        ;;
+esac
