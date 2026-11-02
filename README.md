@@ -1,6 +1,7 @@
 # Plex Local Bridge
 
 [![CI](https://github.com/hamhub-app/plex-local-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/hamhub-app/plex-local-bridge/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/hamhub-app/plex-local-bridge?include_prereleases)](https://github.com/hamhub-app/plex-local-bridge/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 **解决 Plex 外网无法播放、403 和原始文件读取失败等问题。**
@@ -23,11 +24,13 @@ Plex Local Bridge 是由 HamHub 开源的群晖 Plex 本机代理套件，将公
 
 适用于 **DSM 7.2.2+ 的原生 Plex Media Server 套件**。开始前，确保公网请求已能到达 NAS，Plex 已认领并启用账号鉴权；“无需身份验证即可访问的 IP 地址和网络列表”应保持为空。
 
-1. 从 [GitHub Actions](https://github.com/hamhub-app/plex-local-bridge/actions/workflows/ci.yml) 下载通过检查的 `plex-local-bridge-spk` 产物，解压后在套件中心手动安装对应架构的 SPK。
+1. 从 [GitHub Releases](https://github.com/hamhub-app/plex-local-bridge/releases) 的 **Assets** 下载对应架构的 `.spk`，在 DSM「套件中心 → 手动安装」中直接选择安装，**无需解压或自行编译，也无需登录 GitHub**。Intel / AMD 64 位 NAS 选择 `x86_64.spk`，ARM 64 位 NAS 选择 `armv8.spk`。
 2. 启动套件并打开 WebUI。默认 NAS 入口为 **32400**、代理监听为 **13240**，也可以自行修改。
 3. 只使用公网 IPv4 时，取消勾选“同时接管 IPv6 入口”。
 4. 点击“保存并应用”→“启用 / 更新接管”，在 **DSM 原生窗口**确认管理员密码。
 5. 页面显示“接管中”后，用原来的公网地址重新播放。
+
+每个 Release 同时提供两种架构的 SPK 和对应的 `.spk.sha256` 校验文件。开发测试包仍可从 [GitHub Actions](https://github.com/hamhub-app/plex-local-bridge/actions/workflows/ci.yml) 下载 `plex-local-bridge-spk` 产物，解压后使用其中的 SPK。
 
 需要 NAS 重启后继续接管时，在授权前勾选“NAS 重启后自动恢复接管”。管理员密码只交给 DSM 校验，套件后端不接收、不记录、不保存密码。
 
@@ -55,6 +58,8 @@ python3 scripts/build_spk.py --arch arm64
 ```
 
 产物位于 `dist/`，附带 SHA-256。`amd64` 对应 x86_64，`arm64` 对应 armv8。
+
+发布时将 `VERSION` 更新为套件版本并推送对应的 `v<VERSION>` 标签（例如 `v0.2.6-0009`）。CI 通过测试、构建与校验后，会自动创建实验版 Release 并上传两种架构的 SPK 和 SHA-256 文件；标签必须与 `VERSION` 一致。
 
 更多配置、权限原理、诊断恢复和测试命令见 [详细文档](doc/DETAILS.md)。
 

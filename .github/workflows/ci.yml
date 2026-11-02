@@ -7,6 +7,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Check release tag matches package version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          version="$(cat VERSION)"
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            printf 'Release tag must be v%s, got %s\n' "$version" "$GITHUB_REF_NAME" >&2
+            exit 1
+          fi
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
@@ -33,3 +41,53 @@ jobs:
             dist/*.spk
             dist/*.spk.sha256
           if-no-files-found: error
+  release:
+    name: Publish SPK release
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: plex-local-bridge-spk
+          path: dist
+      - name: Verify both architecture packages are present
+        run: |
+          version="$(cat VERSION)"
+          for arch in x86_64 armv8; do
+            test -s "dist/plex-local-bridge-${version}-${arch}.spk"
+            test -s "dist/plex-local-bridge-${version}-${arch}.spk.sha256"
+          done
+      - name: Verify package checksums
+        working-directory: dist
+        run: sha256sum --check *.spk.sha256
+      - name: Publish GitHub prerelease with installable SPKs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          version="$(cat VERSION)"
+          cat > "$RUNNER_TEMP/release-notes.md" <<'EOF'
+          解决 Plex 外网无法播放、403 和原始文件读取失败等问题。当前为实验版本，适用于 DSM 7.2.2+ 的原生 Plex Media Server 套件。
+
+          ## 下载与安装
+
+          - Intel / AMD 64 位 NAS：下载文件名以 `x86_64.spk` 结尾的安装包。
+          - ARM 64 位 NAS：下载文件名以 `armv8.spk` 结尾的安装包；真实 ARM NAS 仍待验证。
+          - `.spk` 可在 DSM「套件中心 → 手动安装」中直接选择，无需解压或自行编译；`.spk.sha256` 用于校验下载文件。
+
+          安装后打开 WebUI，保存配置并启用端口接管。默认 NAS 入口为 32400，代理监听为 13240；只使用公网 IPv4 时，关闭 IPv6 接管。在 DSM 原生窗口确认管理员密码后，继续使用原来的公网地址播放。
+
+          配置方法与适用范围见 [README](https://github.com/hamhub-app/plex-local-bridge#readme)。
+          EOF
+          gh release create "$GITHUB_REF_NAME" \
+            "dist/plex-local-bridge-${version}-x86_64.spk" \
+            "dist/plex-local-bridge-${version}-x86_64.spk.sha256" \
+            "dist/plex-local-bridge-${version}-armv8.spk" \
+            "dist/plex-local-bridge-${version}-armv8.spk.sha256" \
+            --verify-tag --prerelease \
+            --title "Plex Local Bridge $version（实验版）" \
+            --notes-file "$RUNNER_TEMP/release-notes.md"
